@@ -21,3 +21,10 @@ C:\Program Files\
 Please follow the part in [doc](https://github.com/CoderStellaJ/CS4225-Data-System/blob/master/setup_IDE_win_macos_linux.docx)
 
 ### Building cluster with docker
+* Install Docker Toolbox or Docker Desktop
+* Docker pull image
+<br/> Open Docker Quickstart Terminal
+<br/> `docker pull nusbigdatacs4225/ubuntu-with-hadoop-spark`
+* Docker configure nodes
+<br/> `docker run -it -h master --name master nusbigdatacs4225/ubuntu-with-hadoop-spark`
+<br/> `ctrl+p` then `ctrl+q`
