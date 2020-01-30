@@ -7,9 +7,12 @@ CS4225 big data system for data science
 C:\Program Files\
 ```
 * Set the Environment variables:
+<br/> Add to user variable
 <br/> `HADOOP_BIN_PATH` : `%HADOOP_HOME%\bin`
 <br/> `HADOOP_HOME` : `E:\soft\hadoop-2.7.4` (your Hadoop’s installation path)
-<br/> Add `%HADOOP_HOME%\bin` and `%HADOOP_HOME%\sbin` to your system Path
+<br/> `JAVA_HOME`: `C:\Program Files\Java\jdk-11.0.5`
+<br/> Add to system variable Path
+<br/> `%HADOOP_HOME%\bin` and `%HADOOP_HOME%\sbin`
 
 * Download the files necessary for Windows(such as winutils.exe, hadoop.dll) from [this link](https://github.com/cdarlint/winutils)
 <br/> find the version of your hadoop and put the files into `C:\Program Files\hadoop-2.9.2\bin`
