@@ -57,6 +57,7 @@ cd /usr/local/hadoop
 bin/hdfs namenode -format
 sbin/start-all.sh
 ```
+To stop your nodes: `sbin/stop-all.sh`
 
 ### Run your application
 * Create input and output folders
