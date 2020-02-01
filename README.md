@@ -58,6 +58,11 @@ bin/hdfs namenode -format
 sbin/start-all.sh
 ```
 To stop your nodes: `sbin/stop-all.sh`
+<br/> To let namenode leave safe mode: 
+```
+cd /usr/local/hadoop
+bin/hadoop dfsadmin -safemode leave
+```
 
 ### Run your application
 * Create input and output folders
