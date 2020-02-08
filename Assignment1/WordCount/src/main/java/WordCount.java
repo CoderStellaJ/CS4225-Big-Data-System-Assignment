@@ -3,25 +3,20 @@
 
 // related
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-
 
 
 public class WordCount {
@@ -29,33 +24,80 @@ public class WordCount {
     public static class Mapper1 extends Mapper<Object, Text, Text, IntWritable> {
 
         private Text word = new Text();
-        private final static IntWritable one = new IntWritable(1);
+        private final HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
 
+        @Override
+        protected void setup(Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            System.out.println("Mapper 1 setup");
+        }
+
+        @Override
         public void map(Object key, Text value, Context context)
                 throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());
 
             while (itr.hasMoreTokens()) {
                 word.set(itr.nextToken());
-                context.write(word, one);
+                if (countMap.containsKey(word)) {
+                    countMap.put(word, countMap.get(word) + 1);
+                }else {
+                    //needs to create a new Text object as key. Otherwise Hadoop modifies this object.
+                    countMap.put(new Text(word), 1);
+                }
+            }
+
+        }
+
+        @Override
+        protected void cleanup(Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            System.out.println("Mapper 1 cleanup");
+
+            for(Text textKey : countMap.keySet()) {
+                System.out.println("Map 1 = key: "+ textKey +" |val: "+countMap.get(textKey));
+                context.write(textKey, new IntWritable(countMap.get(textKey)));
             }
         }
     }
+
     //Mapper 2
     public static class Mapper2 extends Mapper<Object, Text, Text, IntWritable> {
 
         private Text word = new Text();
-        private final static IntWritable one = new IntWritable(1);
+        private HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
 
+        @Override
+        protected void setup(Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            System.out.println("Mapper 2 setup");
+        }
+
+        @Override
         public void map(Object key, Text value, Context context)
                 throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());
 
             while (itr.hasMoreTokens()) {
                 word.set(itr.nextToken());
-                context.write(word, one);
+                if (countMap.containsKey(word)) {
+                    countMap.put(word, countMap.get(word) + 1);
+                }else {
+                    countMap.put(new Text(word), 1);
+                }
             }
         }
+
+        @Override
+        protected void cleanup(Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            System.out.println("Mapper 2 cleanup");
+            for(Text textKey: countMap.keySet()) {
+                System.out.println("Map 2 = key: "+textKey+" |val: "+countMap.get(textKey));
+                context.write(textKey, new IntWritable(countMap.get(textKey)));
+            }
+        }
+
     }
     //sum the wordcount
     public static class IntSumReducer extends
@@ -67,6 +109,7 @@ public class WordCount {
 
             int sum = 0;
             for (IntWritable val : values) {
+//                System.out.println("key: " + key + " val: " + val);
                 sum += val.get();
             }
             result.set(sum);
