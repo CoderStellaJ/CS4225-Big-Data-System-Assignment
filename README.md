@@ -1,4 +1,4 @@
-# CS4225-Data-System
+# CS4225-Data-System-Assignment
 CS4225 big data system for data science
 
 ### Setting up IDE on windows
