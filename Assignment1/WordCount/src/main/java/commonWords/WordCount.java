@@ -1,10 +1,20 @@
 package commonWords;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -17,18 +27,31 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 
-
 public class WordCount {
     //Mapper 1
     public static class Mapper1 extends Mapper<Object, Text, Text, CompositeValueWritable> {
 
         private Text word = new Text();
         private final HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
+        private final Set<String> stopwords = new HashSet<String>();
+        private static final String STOP_WORD_PATH = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task1_data\\stopwords.txt";
 
         @Override
         protected void setup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 1 setup");
+            Configuration conf = context.getConfiguration();
+            try {
+                Path path = new Path(STOP_WORD_PATH);
+                FileSystem fs= FileSystem.get(new Configuration());
+                BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
+                String word = null;
+                while ((word= br.readLine())!= null) {
+                    this.stopwords.add(word.toLowerCase());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -38,11 +61,13 @@ public class WordCount {
 
             while (itr.hasMoreTokens()) {
                 word.set(itr.nextToken());
-                if (countMap.containsKey(word)) {
-                    countMap.put(word, countMap.get(word) + 1);
-                }else {
-                    //needs to create a new Text object as key. Otherwise Hadoop modifies this object.
-                    countMap.put(new Text(word), 1);
+                if(!stopwords.contains(word.toString().toLowerCase())) {
+                    if (countMap.containsKey(word)) {
+                        countMap.put(word, countMap.get(word) + 1);
+                    }else {
+                        //needs to create a new Text object as key. Otherwise Hadoop modifies this object.
+                        countMap.put(new Text(word), 1);
+                    }
                 }
             }
 
@@ -54,7 +79,6 @@ public class WordCount {
             System.out.println("Mapper 1 cleanup");
 
             for(Text textKey : countMap.keySet()) {
-                //System.out.println("Map 1 = key: "+ textKey +" |val: "+countMap.get(textKey));
                 context.write(textKey, new CompositeValueWritable(countMap.get(textKey), 1));
             }
         }
@@ -65,11 +89,26 @@ public class WordCount {
 
         private Text word = new Text();
         private HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
+        private final Set<String> stopwords = new HashSet<String>();
+        private static final String STOP_WORD_PATH = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task1_data\\stopwords.txt";
 
         @Override
         protected void setup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 2 setup");
+            Configuration conf = context.getConfiguration();
+            try {
+                Path path = new Path(STOP_WORD_PATH);
+                FileSystem fs= FileSystem.get(new Configuration());
+                BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
+                String word = null;
+                while ((word= br.readLine())!= null) {
+                    this.stopwords.add(word.toLowerCase());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override
@@ -79,10 +118,12 @@ public class WordCount {
 
             while (itr.hasMoreTokens()) {
                 word.set(itr.nextToken());
-                if (countMap.containsKey(word)) {
-                    countMap.put(word, countMap.get(word) + 1);
-                }else {
-                    countMap.put(new Text(word), 1);
+                if(!stopwords.contains(word.toString().toLowerCase())) {
+                    if (countMap.containsKey(word)) {
+                        countMap.put(word, countMap.get(word) + 1);
+                    }else {
+                        countMap.put(new Text(word), 1);
+                    }
                 }
             }
         }
@@ -92,7 +133,6 @@ public class WordCount {
                 throws IOException, InterruptedException {
             System.out.println("Mapper 2 cleanup");
             for(Text textKey: countMap.keySet()) {
-                //System.out.println("Map 2 = key: "+textKey+" |val: "+countMap.get(textKey));
                 context.write(textKey, new CompositeValueWritable(countMap.get(textKey), 2));
             }
         }
@@ -102,6 +142,8 @@ public class WordCount {
     public static class IntSumReducer extends
             Reducer<Text, CompositeValueWritable, Text, IntWritable> {
         private IntWritable result = new IntWritable();
+        private final HashMap<Text, Integer> resultMap = new HashMap<Text, Integer>();
+        public static final int NUM = 15;
 
         public void reduce(Text key, Iterable<CompositeValueWritable> values,
                            Context context) throws IOException, InterruptedException {
@@ -118,11 +160,37 @@ public class WordCount {
             int min = Math.min(frequency1, frequency2);
             System.out.println("text: "+key+" |frequency1: "+frequency1+" |frequency2: "+frequency2+" |min: "+min);
             if (min > 0) {
-                result.set(min);
-                context.write(key, result);
+                    resultMap.put(new Text(key), min);
             }
         }
+
+        @Override
+        public void cleanup(Reducer<Text, CompositeValueWritable, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            //sort the resultmap based on value
+            Comparator<Map.Entry<Text, Integer>> valueComparator = new Comparator<Map.Entry<Text,Integer>>() {
+                public int compare(Map.Entry<Text, Integer> e1, Map.Entry<Text, Integer> e2) {
+                    Integer v1 = e1.getValue();
+                    Integer v2 = e2.getValue();
+                    //descending order
+                    return v2.compareTo(v1);
+                }
+            };
+            List<Map.Entry<Text, Integer>> listOfEntries = new ArrayList<Map.Entry<Text, Integer>>(resultMap.entrySet());
+            Collections.sort(listOfEntries, valueComparator);
+            int k = 0;
+            for(Map.Entry<Text, Integer> entry: listOfEntries) {
+                k++;
+                result.set(entry.getValue());
+                context.write(entry.getKey(), result);
+                if(k >= NUM) {
+                    break;
+                }
+            }
+
+        }
     }
+
     ///////////////////////////////////////////////////////////////////////////////////
     //main function
 
