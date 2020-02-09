@@ -1,7 +1,5 @@
-//package wordcountpkg;
-//here is your own package name
+package commonWords;
 
-// related
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
@@ -17,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
+
 
 
 public class WordCount {
