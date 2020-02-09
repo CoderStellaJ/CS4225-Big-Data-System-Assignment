@@ -20,13 +20,13 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class WordCount {
     //Mapper 1
-    public static class Mapper1 extends Mapper<Object, Text, Text, IntWritable> {
+    public static class Mapper1 extends Mapper<Object, Text, Text, CompositeValueWritable> {
 
         private Text word = new Text();
         private final HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
 
         @Override
-        protected void setup(Mapper<Object, Text, Text, IntWritable>.Context context)
+        protected void setup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 1 setup");
         }
@@ -49,25 +49,25 @@ public class WordCount {
         }
 
         @Override
-        protected void cleanup(Mapper<Object, Text, Text, IntWritable>.Context context)
+        protected void cleanup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 1 cleanup");
 
             for(Text textKey : countMap.keySet()) {
-                System.out.println("Map 1 = key: "+ textKey +" |val: "+countMap.get(textKey));
-                context.write(textKey, new IntWritable(countMap.get(textKey)));
+                //System.out.println("Map 1 = key: "+ textKey +" |val: "+countMap.get(textKey));
+                context.write(textKey, new CompositeValueWritable(countMap.get(textKey), 1));
             }
         }
     }
 
     //Mapper 2
-    public static class Mapper2 extends Mapper<Object, Text, Text, IntWritable> {
+    public static class Mapper2 extends Mapper<Object, Text, Text, CompositeValueWritable> {
 
         private Text word = new Text();
         private HashMap<Text, Integer> countMap = new HashMap<Text, Integer>();
 
         @Override
-        protected void setup(Mapper<Object, Text, Text, IntWritable>.Context context)
+        protected void setup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 2 setup");
         }
@@ -88,31 +88,39 @@ public class WordCount {
         }
 
         @Override
-        protected void cleanup(Mapper<Object, Text, Text, IntWritable>.Context context)
+        protected void cleanup(Mapper<Object, Text, Text, CompositeValueWritable>.Context context)
                 throws IOException, InterruptedException {
             System.out.println("Mapper 2 cleanup");
             for(Text textKey: countMap.keySet()) {
-                System.out.println("Map 2 = key: "+textKey+" |val: "+countMap.get(textKey));
-                context.write(textKey, new IntWritable(countMap.get(textKey)));
+                //System.out.println("Map 2 = key: "+textKey+" |val: "+countMap.get(textKey));
+                context.write(textKey, new CompositeValueWritable(countMap.get(textKey), 2));
             }
         }
 
     }
     //sum the wordcount
     public static class IntSumReducer extends
-            Reducer<Text, IntWritable, Text, IntWritable> {
+            Reducer<Text, CompositeValueWritable, Text, IntWritable> {
         private IntWritable result = new IntWritable();
 
-        public void reduce(Text key, Iterable<IntWritable> values,
+        public void reduce(Text key, Iterable<CompositeValueWritable> values,
                            Context context) throws IOException, InterruptedException {
 
-            int sum = 0;
-            for (IntWritable val : values) {
-//                System.out.println("key: " + key + " val: " + val);
-                sum += val.get();
+            int frequency1 = 0;
+            int frequency2 = 0;
+            for (CompositeValueWritable val : values) {
+                    if (val.getId() == 1) {
+                        frequency1 = val.getFrequency();
+                    }else if (val.getId() == 2) {
+                        frequency2 = val.getFrequency();
+                    }
             }
-            result.set(sum);
-            context.write(key, result);
+            int min = Math.min(frequency1, frequency2);
+            System.out.println("text: "+key+" |frequency1: "+frequency1+" |frequency2: "+frequency2+" |min: "+min);
+            if (min > 0) {
+                result.set(min);
+                context.write(key, result);
+            }
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////
@@ -139,12 +147,14 @@ public class WordCount {
         MultipleInputs.addInputPath(job, new Path(otherArgs[1]),
                 TextInputFormat.class, Mapper2.class);
 
-        job.setCombinerClass(IntSumReducer.class);
+//        job.setCombinerClass(IntSumReducer.class);
         job.setReducerClass(IntSumReducer.class);
+
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputValueClass(CompositeValueWritable.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+
         job.setNumReduceTasks(1);
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[2]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
