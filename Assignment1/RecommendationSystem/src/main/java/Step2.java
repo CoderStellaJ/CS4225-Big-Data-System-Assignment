@@ -26,15 +26,16 @@ public class Step2 {
 	public static class Step2_UserVectorToCooccurrenceMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
         private final static Text k = new Text();
         private final static IntWritable v = new IntWritable(1);
-        public static final Pattern DELIMITER = Pattern.compile("[:]");
+        public static final Pattern DELIMITER = Pattern.compile("[\t:]");
 
         @Override
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
             String[] tokens = Recommend.DELIMITER.split(values.toString());
-            System.out.println(values.toString());
             //ToDo
+            //<userid itemid:score, itemid:score> -> <itemid1_itemid2, 1>
             List<Integer> itemList = new ArrayList<Integer>();
-            for (String token:tokens) {
+            for (int i = 1; i < tokens.length; i++) {
+                String token = tokens[i];
                 String[] valueTokens = DELIMITER.split(token);
                 assert (valueTokens.length == 2) : "Value token is invalid.";
                 int itemId = Integer.parseInt(valueTokens[0]);
@@ -45,7 +46,7 @@ public class Step2 {
                 for(int j = 0; j < itemList.size(); j++) {
                     int itemId1 = itemList.get(i);
                     int itemId2 = itemList.get(j);
-//                    System.out.println(Integer.toString(itemId1) + "_" + Integer.toString(itemId2));
+                    // System.out.println(Integer.toString(itemId1) + "_" + Integer.toString(itemId2));
                     k.set(Integer.toString(itemId1) + "_" + Integer.toString(itemId2));
                     v.set(1);
                     context.write(k, v);
@@ -61,6 +62,7 @@ public class Step2 {
         protected void reduce(Text key, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
             //ToDo
+            // <itemid1_itemid2, 1> -> <itemid1_itemid2, count>
             int sum = 0;
             for(IntWritable value: values) {
                 sum += value.get();

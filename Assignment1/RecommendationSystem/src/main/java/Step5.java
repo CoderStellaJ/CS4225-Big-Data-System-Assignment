@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -23,25 +24,30 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import HDFSAPI;
 
 public class Step5 {
-	public static class Step5_FilterSortMapper extends Mapper<Text, Text, Text, Text> {
+	public static class Step5_FilterSortMapper extends Mapper<LongWritable, Text, Text, Text> {
 		private String flag;
-		private Text k;
-		private Text v;
+		private final Text k = new Text();
+		private final Text v = new Text();
+		public static final Pattern DELIMITER = Pattern.compile("[\t]");
 
 		@Override
-		protected void setup(Mapper<Text, Text, Text, Text>.Context context)
+		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
+			System.out.println("mapper 5 setup");
 			FileSplit split = (FileSplit) context.getInputSplit();
 			flag = split.getPath().getParent().getName();// dataset
 		}
 
 		@Override
-		public void map(Text key, Text values, Context context) throws IOException, InterruptedException {
+		public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
 			//you can use provided SortHashMap.java or design your own code.
 			//ToDo
-			//
-			k.set(key);
-			v.set(values);
+			//sort the items based on the score
+			String[] tokens = DELIMITER.split(values.toString());
+			String itemId = tokens[0];
+			String score = tokens[1];
+			k.set(itemId);
+			v.set(score);
 			context.write(k, v);
 		}
 
@@ -49,24 +55,38 @@ public class Step5 {
 
 
 	public static class Step5_FilterSortReducer extends Reducer<Text, Text, Text, Text> {
+		private final Text k = new Text();
+		private final Text v = new Text();
 		private final HashMap<String, Float> resultMap = new HashMap<String, Float>();
-		private Text k;
-		private Text v;
+		private final SortHashMap sortMap = new SortHashMap();
+
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         	//you can use provided SortHashMap.java or design your own code.
-
             //ToDo
-			resultMap.put(key.toString(), Float.parseFloat(values.toString()));
-			List<Entry<String,Float>> result = SortHashMap.sortHashMap(resultMap);
+			int k = 0;
+			for(Text value: values) {
+				k++;
+				resultMap.put(key.toString(), Float.parseFloat(value.toString()));
+			}
+			if(k >= 2) {
+				System.out.println("error in step 5 reducer");
+			}
+        }
+
+		@Override
+		public void cleanup(Reducer<Text, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			List<Entry<String,Float>> result = sortMap.sortHashMap(resultMap);
+//			System.out.println("in step 5");
 			for(Entry<String, Float> entry: result) {
+//				System.out.println(entry.getKey() + "\t" + entry.getValue());
 				k.set(entry.getKey());
 				v.set(entry.getValue().toString());
 				context.write(k, v);
 			}
-
-        }
+		}
     }
 
 	public static void run(Map<String, String> path) throws IOException, InterruptedException, ClassNotFoundException {
@@ -74,7 +94,7 @@ public class Step5 {
 		Configuration conf = Recommend.config();
 		// I/O path
 		Path input1 = new Path(path.get("Step5Input1"));
-		Path input2 = new Path(path.get("Step5Input2"));
+		// Path input2 = new Path(path.get("Step5Input2"));
 		Path output = new Path(path.get("Step5Output"));
 		// delete last saved output
 		HDFSAPI hdfs = new HDFSAPI(new Path(Recommend.HDFS));
@@ -92,7 +112,8 @@ public class Step5 {
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-        FileInputFormat.setInputPaths(job, input1,input2);
+        // FileInputFormat.setInputPaths(job, input1,input2);
+		FileInputFormat.setInputPaths(job, input1);
         FileOutputFormat.setOutputPath(job, output);
 
         job.waitForCompletion(true);

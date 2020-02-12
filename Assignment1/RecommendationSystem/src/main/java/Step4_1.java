@@ -22,10 +22,12 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import HDFSAPI;
 
 public class Step4_1 {
-	public static class Step4_PartialMultiplyMapper extends Mapper<Text, Text, Text, Text> {
+	public static class Step4_PartialMultiplyMapper extends Mapper<LongWritable, Text, Text, Text> {
         private String flag;
 	    private final static Text k = new Text();
         private final static Text v = new Text();
+        public static final Pattern DELIMITER = Pattern.compile("[\t]");
+
         // you can solve the co-occurrence Matrix/left matrix and score matrix/right matrix separately
 
         @Override
@@ -35,12 +37,15 @@ public class Step4_1 {
         }
 
         @Override
-        public void map(Text key, Text values, Context context) throws IOException, InterruptedException {
-            String[] tokens = Recommend.DELIMITER.split(values.toString());
+        public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
             //ToDo
-            //
-            k.set(key);
-            v.set(values);
+            //<itemId1_itemId2, score/frequency> -> <itemId1_itemId2, score/frequency>
+            //System.out.println(values);
+            String[] tokens = DELIMITER.split(values.toString());
+            String itemIdPair = tokens[0];
+            String score_frequency = tokens[1];
+            k.set(itemIdPair);
+            v.set(score_frequency);
             context.write(k,v);
         }
 
@@ -49,28 +54,27 @@ public class Step4_1 {
     public static class Step4_AggregateReducer extends Reducer<Text, Text, Text, Text> {
         private final static Text k = new Text();
         private final static Text v = new Text();
-        public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[_]");
+        public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[\t_]");
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             //ToDo
             //multiply the values with the same key
             int size = 0;
-            double mul = 1.0;
+            float mul = 1;
             for(Text value : values) {
-                double score = Double.parseDouble(value.toString());
+                // System.out.println(value.toString());
+                double score = Float.parseFloat(value.toString());
                 mul *= score;
                 size ++;
             }
-            if(size != 2) {
-                System.out.println("error in step 4_1");
-                mul = 0.0;
+            if(size == 2) {
+                String[] tokens = DELIMITER_UNDERSCORE.split(key.toString());
+                String itemId2 = tokens[1];
+                k.set(itemId2);
+                v.set(Float.toString(mul));
+                context.write(k, v);
             }
-            String[] tokens = DELIMITER_UNDERSCORE.split(key.toString());
-            String itemId2 = tokens[1];
-            k.set(itemId2);
-            v.set(Double.toString(mul));
-            context.write(k, v);
 
         }
     }

@@ -1,6 +1,7 @@
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -17,15 +18,17 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import HDFSAPI;
 
 public class Step4_2 {
-	public static class Step4_RecommendMapper extends Mapper<Text, Text, Text, Text> {
+	public static class Step4_RecommendMapper extends Mapper<LongWritable, Text, Text, Text> {
         private final static Text k = new Text();
         private final static Text v = new Text();
+        public static final Pattern DELIMITER = Pattern.compile("[\t]");
 
         @Override
-        public void map(Text key, Text values, Context context) throws IOException, InterruptedException {
+        public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
         	//ToDo
-            k.set(key);
-            v.set(values.toString());
+            String[] tokens = DELIMITER.split(values.toString());
+            k.set(tokens[0]);
+            v.set(tokens[1]);
             context.write(k, v);
         }
     }
@@ -37,12 +40,12 @@ public class Step4_2 {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         	//ToDo
-            double sum = 0;
+            float sum = 0;
             for(Text value: values) {
-                sum += Double.parseDouble(value.toString());
+                sum += Float.parseFloat(value.toString());
             }
             k.set(key);
-            v.set(Double.toString(sum));
+            v.set(Float.toString(sum));
             context.write(k, v);
         }
     }

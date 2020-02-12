@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -18,7 +19,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 //import org.apache.hadoop.examples.HDFSAPI;
 
 public class Step3 {
-	public static class Step31_UserVectorSplitterMapper extends Mapper<IntWritable, Text, Text, Text> {
+	public static class Step31_UserVectorSplitterMapper extends Mapper<LongWritable, Text, Text, Text> {
 		private final static Text k = new Text();
 		private final static Text v = new Text();
 		//E0134062 (user 62)
@@ -27,15 +28,17 @@ public class Step3 {
 		public static final Pattern DELIMITER_COLON = Pattern.compile("[:]");
 
 		@Override
-		public void map(IntWritable key, Text values, Context context)
+		public void map(LongWritable key, Text values, Context context)
 				throws IOException, InterruptedException {
+			String[] tokens = DELIMITER_COMMA.split(values.toString());
+			String userId = tokens[0];
 			//ToDo
 			//<itemId, score> -> <itemId1_itemId2, score>
-			if(key.get() == USER_ID) {
+			if(Integer.parseInt(userId) == USER_ID) {
 				List<String> itemList = new ArrayList<String>();
 				Map<String, String> scoreMap = new HashMap<String, String>();
-				String[] tokens = DELIMITER_COMMA.split(values.toString());
-				for(String token: tokens) {
+				for(int i = 1; i < tokens.length; i++) {
+					String token = tokens[i];
 					String[] elements = DELIMITER_COLON.split(token);
 					String itemId = elements[0];
 					String score = elements[1];
@@ -80,19 +83,20 @@ public class Step3 {
 		job.waitForCompletion(true);
 		}
 	
-	 public static class Step32_CooccurrenceColumnWrapperMapper extends Mapper<Text, IntWritable, Text, Text> {
+	 public static class Step32_CooccurrenceColumnWrapperMapper extends Mapper<LongWritable, Text, Text, Text> {
 		 private final static Text k = new Text();
 		 private final static Text v = new Text();
-		 public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[_]");
+		 public static final Pattern DELIMITER = Pattern.compile("[\t]");
 
 		@Override
-		public void map(Text key, IntWritable values,Context context)
-				throws IOException, InterruptedException {
-				//ToDo
-			    // <itemid1_itemid2, count> -> <itemid1_itemid2, count>
-				k.set(key.toString());
-				v.set(Integer.toString(values.get()));
-				context.write(k, v);
+		public void map(LongWritable key, Text values,Context context) throws IOException, InterruptedException {
+			//ToDo
+			// <itemid1_itemid2, count> -> <itemid1_itemid2, count>
+			//System.out.println(values);
+			String[] tokens = DELIMITER.split(values.toString());
+			k.set(tokens[0]);
+			v.set(tokens[1]);
+			context.write(k, v);
 		}
 	}
 

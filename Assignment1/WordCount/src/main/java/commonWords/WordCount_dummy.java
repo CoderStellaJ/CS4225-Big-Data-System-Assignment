@@ -215,7 +215,7 @@ public class WordCount {
         MultipleInputs.addInputPath(job, new Path(otherArgs[1]),
                 TextInputFormat.class, Mapper2.class);
 
-//        job.setCombinerClass(IntSumReducer.class);
+        job.setCombinerClass(IntSumReducer.class);
         job.setReducerClass(IntSumReducer.class);
 
         job.setMapOutputKeyClass(Text.class);
