@@ -40,7 +40,7 @@ public class CommonWords {
                         fs.open(path)));
                 String word = null;
                 while ((word = br.readLine()) != null) {
-                    stopwords.add(word);
+                    stopwords.add(word.toLowerCase());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -52,10 +52,11 @@ public class CommonWords {
 
         public void map(Object key, Text value, Context context)
                 throws IOException, InterruptedException {
-            StringTokenizer itr = new StringTokenizer(value.toString(), " \t\n\r\f\".,!?[]:");
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            //delimiter: " \t\n\r\f"
             while (itr.hasMoreTokens()) {
                 word.set(itr.nextToken());
-                if (stopwords.contains(word.toString()))
+                if (stopwords.contains(word.toString().toLowerCase()))
                     continue;
                 context.write(word, one);
             }
