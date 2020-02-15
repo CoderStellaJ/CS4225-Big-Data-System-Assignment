@@ -29,11 +29,14 @@ public class Step5 {
 		private final Text k = new Text();
 		private final Text v = new Text();
 		public static final Pattern DELIMITER = Pattern.compile("[\t]");
+		public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[_]");
+		//E0134062 (62)
+		public static final int USERID = 62;
 
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("mapper 5 setup");
+//			System.out.println("mapper 5 setup");
 			FileSplit split = (FileSplit) context.getInputSplit();
 			flag = split.getPath().getParent().getName();// dataset
 		}
@@ -44,13 +47,19 @@ public class Step5 {
 			//ToDo
 			//sort the items based on the score
 			String[] tokens = DELIMITER.split(values.toString());
-			String itemId = tokens[0];
+			String userItem = tokens[0];
 			String score = tokens[1];
-			k.set(itemId);
-			v.set(score);
-			context.write(k, v);
-		}
+			String[] keyTokens = DELIMITER_UNDERSCORE.split(userItem);
+			String itemId = keyTokens[0];
+			String userId = keyTokens[1];
 
+			if(Integer.parseInt(userId) == USERID) {
+				k.set(itemId);
+				v.set(score);
+				context.write(k, v);
+			}
+
+		}
 	}
 
 
@@ -59,7 +68,6 @@ public class Step5 {
 		private final Text v = new Text();
 		private final HashMap<String, Float> resultMap = new HashMap<String, Float>();
 		private final SortHashMap sortMap = new SortHashMap();
-
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {

@@ -22,13 +22,21 @@ public class Step4_2 {
         private final static Text k = new Text();
         private final static Text v = new Text();
         public static final Pattern DELIMITER = Pattern.compile("[\t]");
+        public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[_]");
+        public static final String UNDERSCORE = "_";
 
         @Override
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
         	//ToDo
+            // <item1_item2_user, mul> -> <item1_user, mul>
             String[] tokens = DELIMITER.split(values.toString());
-            k.set(tokens[0]);
-            v.set(tokens[1]);
+            String keyString = tokens[0];
+            String mul = tokens[1];
+            String[] keyTokens = DELIMITER_UNDERSCORE.split(keyString);
+            String newKey = keyTokens[1] + UNDERSCORE + keyTokens[2];
+
+            k.set(newKey);
+            v.set(mul);
             context.write(k, v);
         }
     }
@@ -40,6 +48,7 @@ public class Step4_2 {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         	//ToDo
+            //<item_user, mul> -> <item_user, score>
             float sum = 0;
             for(Text value: values) {
                 sum += Float.parseFloat(value.toString());

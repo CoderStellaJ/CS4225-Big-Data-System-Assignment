@@ -30,13 +30,15 @@ public class Recommend {
         path.put("Step3Output1", path.get("Step1Input") + "/step3_1");
 
         //step3_2 i/o path
-        path.put("Step3Input2", path.get("Step2Output"));
-        path.put("Step3Output2", path.get("Step1Input") + "/step3_2");
+        //path.put("Step3Input2", path.get("Step2Output"));
+        //path.put("Step3Output2", path.get("Step1Input") + "/step3_2");
 
         //step4 i/o path
         path.put("Step4_1Input1", path.get("Step3Output1"));
-        path.put("Step4_1Input2", path.get("Step3Output2"));
-        path.put("Step4_1Output", path.get("Step1Input") + "/step4_1");      
+        //path.put("Step4_1Input2", path.get("Step3Output2"));
+        path.put("Step4_1Input2", path.get("Step2Output"));
+        path.put("Step4_1Output", path.get("Step1Input") + "/step4_1");
+
         path.put("Step4_2Input", path.get("Step4_1Output"));
         path.put("Step4_2Output", path.get("Step1Input") + "/step4_2");
 
@@ -47,11 +49,12 @@ public class Recommend {
         path.put("Step5Output", path.get("Step1Input") + "/step5");
         
 
-        Step1.run(path);
-        Step2.run(path);
-        Step3.run1(path);
-        Step3.run2(path);   
-        Step4_1.run(path);
+//        Step1.run(path);
+//        Step2.run(path);
+//        Step3.run1(path);
+
+        // Step3.run2(path);
+//        Step4_1.run(path);
         Step4_2.run(path);
         Step5.run(path);
         

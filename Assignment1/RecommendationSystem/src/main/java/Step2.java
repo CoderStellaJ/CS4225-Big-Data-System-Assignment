@@ -2,6 +2,7 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -17,6 +18,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.hash.Hash;
 
 //import recommendpkg.Step1.Step1_ToItemPreMapper;
 //import recommendpkg.Step1.Step1_ToUserVectorReducer;
@@ -27,31 +29,39 @@ public class Step2 {
         private final static Text k = new Text();
         private final static IntWritable v = new IntWritable(1);
         public static final Pattern DELIMITER = Pattern.compile("[\t:]");
+        public final HashSet<String> userSet = new HashSet<String>();
+        public final ArrayList<String> pairList = new ArrayList<String>();
 
         @Override
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
             String[] tokens = Recommend.DELIMITER.split(values.toString());
             //ToDo
-            //<userid itemid:score, itemid:score> -> <itemid1_itemid2, 1>
-            List<Integer> itemList = new ArrayList<Integer>();
+            //<userid itemid:score, itemid:score> -> <itemid1_itemid2_userId, 1>
+            String userId = tokens[0];
+            userSet.add(userId);
             for (int i = 1; i < tokens.length; i++) {
-                String token = tokens[i];
-                String[] valueTokens = DELIMITER.split(token);
-                assert (valueTokens.length == 2) : "Value token is invalid.";
-                int itemId = Integer.parseInt(valueTokens[0]);
-                itemList.add(itemId);
-            }
-
-            for (int i = 0; i < itemList.size(); i++) {
-                for(int j = 0; j < itemList.size(); j++) {
-                    int itemId1 = itemList.get(i);
-                    int itemId2 = itemList.get(j);
-                    // System.out.println(Integer.toString(itemId1) + "_" + Integer.toString(itemId2));
-                    k.set(Integer.toString(itemId1) + "_" + Integer.toString(itemId2));
-                    v.set(1);
-                    context.write(k, v);
+                for (int j = 1; j < tokens.length; j++) {
+                    String token1 = tokens[i];
+                    String token2 = tokens[j];
+                    String[] valueTokens1 = DELIMITER.split(token1);
+                    String[] valueTokens2 = DELIMITER.split(token2);
+                    String itemId1 = valueTokens1[0];
+                    String itemId2 = valueTokens2[0];
+                    pairList.add(itemId1 + "_" + itemId2);
                 }
             }
+
+        }
+
+        public void cleanup(Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+                for(String userId: userSet) {
+                    for(String pair: pairList) {
+                        k.set(pair + "_" + userId);
+                        v.set(1);
+                        context.write(k, v);
+                    }
+                }
         }
     }
 
@@ -62,7 +72,7 @@ public class Step2 {
         protected void reduce(Text key, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
             //ToDo
-            // <itemid1_itemid2, 1> -> <itemid1_itemid2, count>
+            // <itemid1_itemid2_userid, 1> -> <itemid1_itemid2_userid, count>
             int sum = 0;
             for(IntWritable value: values) {
                 sum += value.get();
