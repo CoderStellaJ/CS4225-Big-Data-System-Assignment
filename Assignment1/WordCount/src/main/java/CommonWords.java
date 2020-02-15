@@ -170,6 +170,9 @@ public class CommonWords {
                     word.set(value.toString());
                     context.write(count, word);
                     size++;
+                    if(size >= NUM) {
+                        break;
+                    }
                 }
             }
         }
