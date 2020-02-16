@@ -64,6 +64,10 @@ cd /usr/local/hadoop
 bin/hadoop dfsadmin -safemode leave
 ```
 
+### Create your jar file
+* use JDK 8, otherwise hadoop doesn't support JDK11 version
+* Project Structure -> Artifacts -> Copy to the output directory and link via manifest
+ 
 ### Run your application
 * Create input and output folders
 <br/> Enter master node `docker exec -it master bash`
