@@ -29,7 +29,8 @@ public class CommonWords {
             Mapper<Object, Text, Text, IntWritable> {
 
         Set<String> stopwords = new HashSet<String>();
-        private static final String STOP_WORD_PATH = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task1_data\\stopwords.txt";
+        //private static final String STOP_WORD_PATH = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task1_data\\stopwords.txt";
+        private static final String STOP_WORD_PATH = "assignment1_task1/stopwords.txt";
 
         @Override
         protected void setup(Context context) {
