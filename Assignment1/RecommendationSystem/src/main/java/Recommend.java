@@ -8,14 +8,15 @@ import org.apache.hadoop.fs.Path;
 //import HDFSAPI;
 
 public class Recommend {
-	public static final String HDFS = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task2_data";
+//	public static final String HDFS = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task2_data";
+    public static final String HDFS = "assignment1_task2/";
    
     public static final Pattern DELIMITER = Pattern.compile("[\t,]");
 
     public static void main(String[] args) throws Exception {
     	Map<String, String> path = new HashMap<String, String>();
     	//path for local data
-    	path.put("data", "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task2_data\\data.csv");
+    	path.put("data", HDFS + "/data.csv");
     	
     	//step1 i/o path
         path.put("Step1Input", HDFS + "/recommend");
@@ -49,12 +50,12 @@ public class Recommend {
         path.put("Step5Output", path.get("Step1Input") + "/step5");
         
 
-//        Step1.run(path);
-//        Step2.run(path);
-//        Step3.run1(path);
+        Step1.run(path);
+        Step2.run(path);
+        Step3.run1(path);
 
         // Step3.run2(path);
-//        Step4_1.run(path);
+        Step4_1.run(path);
         Step4_2.run(path);
         Step5.run(path);
         

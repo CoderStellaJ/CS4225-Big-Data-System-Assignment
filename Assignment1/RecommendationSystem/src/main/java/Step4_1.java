@@ -40,8 +40,7 @@ public class Step4_1 {
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
             //ToDo
             //<itemId1_itemId2, user_score/frequency> -> <itemId1_itemId2, user_score/frequency>
-            //System.out.println(values);
-//            System.out.println("values in step 4_1 map: "+values);
+
             String[] tokens = DELIMITER.split(values.toString());
             String itemIdPair = tokens[0];
             String score_frequency = tokens[1];

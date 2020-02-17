@@ -36,7 +36,6 @@ public class Step5 {
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-//			System.out.println("mapper 5 setup");
 			FileSplit split = (FileSplit) context.getInputSplit();
 			flag = split.getPath().getParent().getName();// dataset
 		}
@@ -87,9 +86,7 @@ public class Step5 {
 		public void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
 			List<Entry<String,Float>> result = sortMap.sortHashMap(resultMap);
-//			System.out.println("in step 5");
 			for(Entry<String, Float> entry: result) {
-//				System.out.println(entry.getKey() + "\t" + entry.getValue());
 				k.set(entry.getKey());
 				v.set(entry.getValue().toString());
 				context.write(k, v);
