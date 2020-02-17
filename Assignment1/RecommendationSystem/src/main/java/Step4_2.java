@@ -28,7 +28,7 @@ public class Step4_2 {
         @Override
         public void map(LongWritable key, Text values, Context context) throws IOException, InterruptedException {
         	//ToDo
-            // <item1_item2_user, mul> -> <item1_user, mul>
+            // <item1_item2_user, mul> -> <item2_user, mul>
             String[] tokens = DELIMITER.split(values.toString());
             String keyString = tokens[0];
             String mul = tokens[1];

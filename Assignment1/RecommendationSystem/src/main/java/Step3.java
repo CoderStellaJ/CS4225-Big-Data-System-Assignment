@@ -33,6 +33,8 @@ public class Step3 {
 		public static final Pattern DELIMITER_COLON = Pattern.compile("[:]");
 		public static final Pattern DELIMITER_UNDERSCORE = Pattern.compile("[_]");
 
+		//<userid itemid:score, itemid:score> -> <itemid1_itemid2, user_score>
+
 		@Override
 		public void map(LongWritable key, Text values, Context context)
 				throws IOException, InterruptedException {
@@ -61,11 +63,8 @@ public class Step3 {
 				ArrayList<String> userScoreList = entry.getValue();
 				for(String itemId2: itemSet) {
 					for(String userScore: userScoreList) {
-						String[] tokens = DELIMITER_UNDERSCORE.split(userScore);
-						String userId = tokens[0];
-						String score = tokens[1];
-						k.set(itemId1+"_"+itemId2 + "_" + userId);
-						v.set(score);
+						k.set(itemId1+"_"+itemId2);
+						v.set(userScore);
 						context.write(k, v);
 					}
 				}

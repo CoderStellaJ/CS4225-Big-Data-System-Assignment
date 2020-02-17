@@ -1,6 +1,8 @@
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -44,9 +46,11 @@ public class Step4_1 {
             String[] tokens = DELIMITER.split(values.toString());
             String itemIdPair = tokens[0];
             String score_frequency = tokens[1];
+
             k.set(itemIdPair);
             v.set(score_frequency);
-            context.write(k,v);
+            context.write(k, v);
+
         }
 
     }
@@ -61,42 +65,27 @@ public class Step4_1 {
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             //ToDo
             //multiply the values with the same key
-            //<item1_item2_userId, score> and <item1_item2_userId, freq> -> <item1_item2_userId, mul>
-            int count = 0;
-            float mul = 1;
+            //<item1_item2, score> and <item1_item2, freq> -> <item1_item2_userId, mul>
+            HashSet<String> userScoreSet = new HashSet<String>();
+
+            float frequency = 0;
             for(Text val: values) {
-                count++;
-                mul *= Float.parseFloat(val.toString());
+                String valString = val.toString();
+                if(valString.contains(UNDERSCORE)) {
+                    userScoreSet.add(valString);
+                }else {
+                    frequency = Float.parseFloat(valString);
+                }
             }
-            if(count == 2) {
-                k.set(key);
-                v.set(Float.toString(mul));
+
+            for(String userScore: userScoreSet) {
+                String[] userScoreTokens = DELIMITER_UNDERSCORE.split(userScore);
+                String userId = userScoreTokens[0];
+                float score = Float.parseFloat(userScoreTokens[1]);
+                k.set(key + UNDERSCORE + userId);
+                v.set(Float.toString(score * frequency));
                 context.write(k, v);
             }
-//            float frequency = 0;
-//            String key_string = key.toString();
-//
-//            for(Text value : values) {
-//                if(!value.toString().contains(UNDERSCORE)) {
-//                    frequency = Float.parseFloat(value.toString());
-//                }
-//            }
-//            //System.out.println("frequency: "+frequency);
-//            for(Text value : values) {
-//                String valueString = value.toString();
-//                System.out.println("outside if, valueString is " + valueString);
-//                if(valueString.contains(UNDERSCORE)) {
-//                    System.out.println("inside if");
-//                    String[] tokens = DELIMITER_UNDERSCORE.split(valueString);
-//                    String userId = tokens[0];
-//                    String score = tokens[1];
-//                    float score_num = Float.parseFloat(score);
-//                    System.out.println("context write: "+ key_string + UNDERSCORE + userId);
-//                    k.set(key_string + UNDERSCORE + userId);
-//                    v.set(Float.toString(score_num * frequency));
-//                    context.write(k, v);
-//                }
-//            }
 
         }
     }
