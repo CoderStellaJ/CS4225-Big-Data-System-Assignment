@@ -9,7 +9,7 @@ import org.apache.hadoop.fs.Path;
 
 public class Recommend {
 //	public static final String HDFS = "C:\\Repository\\CS4225-Data-System\\Assignment1\\Task2_data";
-    public static final String HDFS = "assignment1_task2/";
+    public static final String HDFS = "assignment1_task2";
    
     public static final Pattern DELIMITER = Pattern.compile("[\t,]");
 
