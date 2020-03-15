@@ -98,18 +98,7 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 https://clubhouse.io/developer-how-to/how-to-set-up-a-hadoop-cluster-in-docker/
 
 ## Assignment 2 - Spark
-
-### Install Spark
-* Download Spark from Spark official website
-You can follow the instructions from https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
-<br/>The version I use for this assignment: Spark 2.4.5 with Hadoop 2.7
-* Download the winutils (check the version) and put it to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
-* Add `SPARK_HOME` to environment variable. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
-<br/> Note: should use `Progra~1` instead of `Program Files` because space is not accepted.
-* Modify or add `HADOOP_HOME` to to environment varibale. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
-* To check whether you have successfully installed: 
-<br/> open `cmd` and navigate to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
-<br/> run `spark-shell`
+Note: **JDK 11, sbt 1.3.4, Scala 2.11.12, Spark 2.3.0**
 
 ### Set up Scala and sbt
 Follow the instruction from this [link](https://kaizen.itversity.com/setup-development-environment-intellij-and-scala-big-data-hadoop-and-spark/)
@@ -120,8 +109,28 @@ Follow the instruction from this [link](https://kaizen.itversity.com/setup-devel
 ### Set up Intellij
 * Create a new project in Intellij
 <br/> Choose `Scala` and `sbt`
-<br/> Select proper versions. I use JDK 11, sbt 1.3.4, Scala 2.13.1
-* Check `build.sbt`
+<br/> Select proper versions. I use JDK 11, sbt 1.3.4, Scala 2.11.12
 * Right click on your project directory, add framework support, choose Scala
 * Go to src/main/scala, right click and create a new scala class
+
+### Validate Scala and sbt
+* You can run the scala code in Intellij directly
+* open cmd, navigate to your project folder, you should see `build.sbt` here
+* run `sbt package` to build a jar file which is located in target folder
+* run `sbt run` to run the program
+
+### Add Spark to Intellij
+* Add `libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.0" ` to `build.sbt`
+
+### Install Spark on your computer (Optional)
+* Download Spark from Spark official website
+You can follow the instructions from https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
+<br/>The version I use for this assignment: Spark 2.4.5 with Hadoop 2.7
+* Download the winutils (check the version) and put it to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+* Add `SPARK_HOME` to environment variable. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+<br/> Note: should use `Progra~1` instead of `Program Files` because space is not accepted.
+* Modify or add `HADOOP_HOME` to to environment varibale. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+* To check whether you have successfully installed: 
+<br/> open `cmd` and navigate to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+<br/> run `spark-shell`
 
