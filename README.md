@@ -1,7 +1,9 @@
 # CS4225-Data-System-Assignment
 CS4225 big data system for data science
 
+## Assignment 1 - Hadoop
 ### Setting up IDE on windows
+Note: The version I use for this assignment is: Java 11, Hadoop 2.9
 * Download binary file from Hadoop and extract into 
 ```
 C:\Program Files\
@@ -85,8 +87,6 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 <br/> Run your application: `hadoop jar xxxx.jar org.apache.hadoop.examples.WordCount input output`
 <br/> print out results: `hdfs dfs -cat output/part-r-00000`
 
-
-
 ### Others
 * Difference between `docker attach` and `docker exec`?
 <br/> If we use `docker attach`, we can use only one instance of shell.
@@ -96,3 +96,32 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 
 ### References
 https://clubhouse.io/developer-how-to/how-to-set-up-a-hadoop-cluster-in-docker/
+
+## Assignment 2 - Spark
+
+### Install Spark
+* Download Spark from Spark official website
+You can follow the instructions from https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
+<br/>The version I use for this assignment: Spark 2.4.5 with Hadoop 2.7
+* Download the winutils (check the version) and put it to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+* Add `SPARK_HOME` to environment variable. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+<br/> Note: should use `Progra~1` instead of `Program Files` because space is not accepted.
+* Modify or add `HADOOP_HOME` to to environment varibale. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+* To check whether you have successfully installed: 
+<br/> open `cmd` and navigate to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+<br/> run `spark-shell`
+
+### Set up Scala and sbt
+Follow the instruction from this [link](https://kaizen.itversity.com/setup-development-environment-intellij-and-scala-big-data-hadoop-and-spark/)
+* Add scala plugin from Intellij
+* Download sbt and add to environment variable path: `C:\Program Files (x86)\sbt\bin`
+<br/> The version I use is 1.3.4
+
+### Set up Intellij
+* Create a new project in Intellij
+<br/> Choose `Scala` and `sbt`
+<br/> Select proper versions. I use JDK 11, sbt 1.3.4, Scala 2.13.1
+* Check `build.sbt`
+* Right click on your project directory, add framework support, choose Scala
+* Go to src/main/scala, right click and create a new scala class
+
