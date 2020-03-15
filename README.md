@@ -107,4 +107,6 @@ You can follow the instructions from https://medium.com/big-data-engineering/how
 * Add `SPARK_HOME` to environment variable. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
 <br/> Note: should use `Progra~1` instead of `Program Files` because space is not accepted.
 * Modify or add `HADOOP_HOME` to to environment varibale. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
-
+* To check whether you have successfully installed: 
+<br/> open `cmd` and navigate to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+<br/> run `spark-shell`
