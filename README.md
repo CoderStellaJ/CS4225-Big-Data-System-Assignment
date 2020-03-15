@@ -1,7 +1,9 @@
 # CS4225-Data-System-Assignment
 CS4225 big data system for data science
 
+## Assignment 1 - Hadoop
 ### Setting up IDE on windows
+Note: The version I use for this assignment is: Java 11, Hadoop 2.9
 * Download binary file from Hadoop and extract into 
 ```
 C:\Program Files\
@@ -85,8 +87,6 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 <br/> Run your application: `hadoop jar xxxx.jar org.apache.hadoop.examples.WordCount input output`
 <br/> print out results: `hdfs dfs -cat output/part-r-00000`
 
-
-
 ### Others
 * Difference between `docker attach` and `docker exec`?
 <br/> If we use `docker attach`, we can use only one instance of shell.
@@ -96,3 +96,15 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 
 ### References
 https://clubhouse.io/developer-how-to/how-to-set-up-a-hadoop-cluster-in-docker/
+
+## Assignment 2 - Spark
+### Install Spark
+
+* Download Spark from Spark official website
+You can follow the instructions from https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
+<br/>The version I use for this assignment: Spark 2.4.5 with Hadoop 2.7
+* Download the winutils (check the version) and put it to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
+* Add `SPARK_HOME` to environment variable. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+<br/> Note: should use `Progra~1` instead of `Program Files` because space is not accepted.
+* Modify or add `HADOOP_HOME` to to environment varibale. e.g. `C:\Progra~1\spark-2.4.5-bin-hadoop2.7`
+
