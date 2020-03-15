@@ -98,8 +98,8 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 https://clubhouse.io/developer-how-to/how-to-set-up-a-hadoop-cluster-in-docker/
 
 ## Assignment 2 - Spark
-### Install Spark
 
+### Install Spark
 * Download Spark from Spark official website
 You can follow the instructions from https://medium.com/big-data-engineering/how-to-install-apache-spark-2-x-in-your-pc-e2047246ffc3
 <br/>The version I use for this assignment: Spark 2.4.5 with Hadoop 2.7
@@ -110,3 +110,18 @@ You can follow the instructions from https://medium.com/big-data-engineering/how
 * To check whether you have successfully installed: 
 <br/> open `cmd` and navigate to `C:\Program Files\spark-2.4.5-bin-hadoop2.7\bin`
 <br/> run `spark-shell`
+
+### Set up Scala and sbt
+Follow the instruction from this [link](https://kaizen.itversity.com/setup-development-environment-intellij-and-scala-big-data-hadoop-and-spark/)
+* Add scala plugin from Intellij
+* Download sbt and add to environment variable path: `C:\Program Files (x86)\sbt\bin`
+<br/> The version I use is 1.3.4
+
+### Set up Intellij
+* Create a new project in Intellij
+<br/> Choose `Scala` and `sbt`
+<br/> Select proper versions. I use JDK 11, sbt 1.3.4, Scala 2.13.1
+* Check `build.sbt`
+* Right click on your project directory, add framework support, choose Scala
+* Go to src/main/scala, right click and create a new scala class
+
