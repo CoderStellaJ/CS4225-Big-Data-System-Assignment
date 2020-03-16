@@ -8,8 +8,8 @@ object CommonWords {
         val startTime = System.currentTimeMillis()
 
         // 3 input file paths
-        val InputFile1 = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/task2-input1.txt"
-        val InputFile2 = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/task2-input2.txt"
+        val InputFile1 = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/task1-input1.txt"
+        val InputFile2 = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/task1-input2.txt"
         val StopWordsFile = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/stopwords.txt"
         val Output = "C:/Repository/CS4225-Data-System/Assignment2/Task1_data/output"
         val Delimiter = "[ \t\n\r\f]"
