@@ -1,5 +1,5 @@
 # CS4225-Data-System-Assignment
-CS4225 big data system for data science
+CS4225 big data system for data science, Hadoop and Spark
 
 ## Assignment 1 - Hadoop
 ### Setting up IDE on windows
@@ -98,7 +98,7 @@ Create input directory in HDFS: `hadoop fs -mkdir -p input`
 https://clubhouse.io/developer-how-to/how-to-set-up-a-hadoop-cluster-in-docker/
 
 ## Assignment 2 - Spark
-Note: **JDK 11, sbt 1.3.4, Scala 2.11.12, Spark 2.3.0**
+Note: **JDK 8, sbt 1.3.4, Scala 2.11.12, Spark 2.3.0**
 
 ### Set up Scala and sbt
 Follow the instruction from this [link](https://kaizen.itversity.com/setup-development-environment-intellij-and-scala-big-data-hadoop-and-spark/)
