@@ -1,5 +1,5 @@
 # CS4225-Data-System-Assignment
-CS4225 big data system for data science
+CS4225 big data system for data science, Hadoop and Spark
 
 ## Assignment 1 - Hadoop
 ### Setting up IDE on windows
