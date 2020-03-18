@@ -50,7 +50,7 @@ object CommonWords {
         sc.parallelize(result).saveAsTextFile(Output)
 
         val endTime = System.currentTimeMillis()
-        println("Execution time is " + (endTime - startTime))
+        println("Execution time in Spark: " + (endTime - startTime) + " ms")
 
     }
 }
