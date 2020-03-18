@@ -12,13 +12,15 @@ case class Posting(postingType: Int, id: Int, parentId: Option[Int], score: Int,
 /** The main class */
 object Assignment2 extends Assignment2 {
 
-    @transient lazy val conf: SparkConf = new SparkConf().setMaster("local").setAppName("Assignment2")
+    @transient lazy val conf: SparkConf = new SparkConf().setMaster("local[*]").setAppName("Assignment2")
     @transient lazy val sc: SparkContext = new SparkContext(conf)
 
     //sc.setLogLevel("WARN")
 
     /** Main function */
     def main(args: Array[String]): Unit = {
+        val startTime = System.currentTimeMillis()
+
         val Output = "../Task2_data/output"
         val lines = sc.textFile("../Task2_data/QA_data/QA_data.csv")
         val raw = rawPostings(lines)
@@ -32,7 +34,9 @@ object Assignment2 extends Assignment2 {
         // format the results, printout and save
         val results = clusterResults(means, vectors)
         printResults(results)
-        results.saveAsTextFile(Output)
+
+        val endTime = System.currentTimeMillis()
+        println("Running time: " + (endTime - startTime) + " ms")
     }
 }
 
@@ -141,7 +145,7 @@ class Assignment2 extends Serializable {
             val distance = euclideanDistance(newClusters.keys.collect(), newCentroids.collect())
             val isConverged = converged(distance)
             // info message
-            println("iteration: "+iteration+" distance: "+distance)
+            println("iteration: "+iteration+" distance: "+BigDecimal(distance))
             println("centroids are:")
             centroids.foreach(println)
             // return means from the function
