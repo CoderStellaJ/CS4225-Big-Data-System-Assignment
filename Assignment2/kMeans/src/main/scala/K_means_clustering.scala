@@ -7,7 +7,7 @@ import annotation.tailrec
 import scala.reflect.ClassTag
 
 /** A raw posting, either a question or an answer */
-case class Posting(postingType: Int, id: Int, parentId: Option[Int], score: Int, tags: Option[String]) extends Serializable
+case class Posting(postingType: Int, id: Int, parentId: Option[Int], score: Int, domain: Option[String]) extends Serializable
 
 /** The main class */
 object Assignment2 extends Assignment2 {
@@ -56,7 +56,7 @@ class Assignment2 extends Serializable {
     def kmeansKernels = 45
 
     /** K-means parameter: Convergence criteria, if changes of all centriods < kmeansEta, stop */
-    def kmeansEta: BigDecimal = 20.0D
+    def kmeansEta = 20.0D
 
     /** K-means parameter: Maximum iterations */
     def kmeansMaxIterations = 120
@@ -70,44 +70,62 @@ class Assignment2 extends Serializable {
                 id = arr(1).toInt,
                 parentId = if (arr(2) == "") None else Some(arr(2).toInt),
                 score = arr(3).toInt,
-                tags = if (arr.length >= 5) Some(arr(4).intern()) else None)
+                domain = if (arr.length >= 5) Some(arr(4).intern()) else None)
             /*      Posting(postingType =    arr(0).toInt,
                           id =             arr(1).toInt,
                           acceptedAnswer = if (arr(2) == "") None else Some(arr(2).toInt),
                           parentId =       if (arr(3) == "") None else Some(arr(3).toInt),
                           score =          arr(4).toInt,
-                          tags =           if (arr.length >= 6) Some(arr(5).intern()) else None)*/
+                          domain =           if (arr.length >= 6) Some(arr(5).intern()) else None)*/
         })
 
 
     /** Group the questions and answers together */
-    def groupedPostings(rawLines: RDD[Posting]): RDD[(Int, Iterable[Posting])] = {
+    def groupedPostings(rawLines: RDD[Posting]): RDD[(Int, Iterable[(Posting, Posting)])] = {
         // Filter the questions and answers separately
         // Prepare them for a join operation by extracting the QID value in the first element of a tuple.
-        rawLines.groupBy(x => if (x.postingType == 1) x.id else x.parentId match {
-            case Some(s) => s
-        })
+        val questions = rawLines
+            .filter( x => x.postingType == 1)
+            .map(x => (x.id, x))
+
+        val answers = rawLines
+            .filter(x => (x.postingType == 2 && x.parentId.isDefined))
+            .map(x => (x.parentId.get, x))
+
+        questions.join(answers).groupByKey()
+
+        //rawLines.groupBy(x => if (x.postingType == 1) x.id else x.parentId.get)
     }
 
 
     /** Compute the maximum score for each posting */
-    def scoredPostings(groupedLines: RDD[(Int, Iterable[Posting])]): RDD[(Int, Int)] = {
+    def scoredPostings(groupedLines: RDD[(Int, Iterable[(Posting, Posting)])]): RDD[(Posting, Int)] = {
         //ToDo
-        groupedLines.mapValues(v => v.maxBy(x => x.score).score)
+        //groupedLines.mapValues(v => v.maxBy(x => x.score).score)
+        def highestScore(posts: Iterable[Posting]): Int = {
+            posts.maxBy(p => p.score).score
+        }
+        groupedLines.flatMap(_._2).groupByKey().mapValues(v => highestScore(v))
     }
 
 
+
     /** Compute the vectors for the kmeans */
-    def vectorPostings(scoredLines: RDD[(Int, Int)]): RDD[(BigInt, Int)] = {
+    def vectorPostings(scoredLines: RDD[(Posting, Int)]): RDD[(Int, Int)] = {
         //ToDo
-        scoredLines.map(pair => (BigInt(pair._1) * BigInt(DomainSpread), pair._2))
+        def findIndex(domain: String): Option[Int] = {
+            val idx = Domains.indexOf(domain)
+            if (idx >= 0) Some(idx) else None
+        }
+
+        scoredLines.map(line => (findIndex(line._1.domain.get).get * DomainSpread, line._2))
     }
 
 
     // k means
 
     /** Main kmeans computation */
-    @tailrec final def kmeans(centroids: Array[(BigInt, Int)], vectors: RDD[(BigInt, Int)], iteration: Int): Array[(BigInt, Int)] = {
+    @tailrec final def kmeans(centroids: Array[(Int, Int)], vectors: RDD[(Int, Int)], iteration: Int): Array[(Int, Int)] = {
         //ToDo
 
         if (iteration >= kmeansMaxIterations) {
@@ -117,14 +135,15 @@ class Assignment2 extends Serializable {
             val clusteredVectors = vectors.map(vec => (centroids(findClosest(vec, centroids)), vec))
             // calculate the new centroids
             val newClusters = clusteredVectors.groupByKey()
-                .map(group => (averageVectors(group._2), group._2))
-            val newCentroids = newClusters.keys
+                .map(group => (group._1, averageVectors(group._2)))
+            val newCentroids = newClusters.values.cache()
             // compute the errors
-            val distance = newClusters
-                .map(cluster => (cluster._1, euclideanDistanceArrayPoint(cluster._2.toArray, cluster._1)))
-                .values
-                .sum()
+            val distance = euclideanDistance(newClusters.keys.collect(), newCentroids.collect())
             val isConverged = converged(distance)
+            // info message
+            println("iteration: "+iteration+" distance: "+distance)
+            println("centroids are:")
+            centroids.foreach(println)
             // return means from the function
             if (isConverged == true) {
                 newCentroids.collect()
@@ -135,8 +154,8 @@ class Assignment2 extends Serializable {
     }
 
 
-    final def clusterResults(means: Array[(BigInt, Int)], vectors: RDD[(BigInt, Int)]):
-    RDD[((BigInt, Int), Int, Int, Int)] = {
+    final def clusterResults(means: Array[(Int, Int)], vectors: RDD[(Int, Int)]):
+    RDD[((Int, Int), Int, Int, Int)] = {
         //ToDo
         val clusteredVectors = vectors.map(vec => (means(findClosest(vec, means)), vec))
         // results is (centroid, size of cluster, median score, average score)
@@ -146,36 +165,35 @@ class Assignment2 extends Serializable {
 
     //  Displaying results:
 
-    def printResults(results: RDD[((BigInt, Int), Int, Int, Int)]) = {
-        results.foreach(res => println("centroid: " + res._1 + " size: " + res._2 + " median score: " + res._3 + " average score: " + res._4))
+    def printResults(results: RDD[((Int, Int), Int, Int, Int)]) = {
+        results.collect().foreach(res => println("centroid: " + res._1 + " size: " + res._2 + " median score: " + res._3 + " average score: " + res._4))
     }
 
 
     //  Kmeans utilities (Just some cases, you can implement your own utilities.)
 
     /** Sample vectors */
-    def sampleVectors(vectors: RDD[(BigInt, Int)]): Array[(BigInt, Int)] = {
+    def sampleVectors(vectors: RDD[(Int, Int)]): Array[(Int, Int)] = {
         // Choose k vectors as initial centroids
-        val sampledVectors = vectors.takeSample(false, kmeansKernels)
-        sampledVectors
+        vectors.takeSample(false, kmeansKernels)
     }
 
 
     /** Decide whether the kmeans clustering converged */
-    def converged(distance: BigDecimal) = distance < kmeansEta
+    def converged(distance: Double) = distance < kmeansEta
 
 
     /** Return the euclidean distance between two points */
-    def euclideanDistancePointPoint(v1: (BigInt, Int), v2: (BigInt, Int)): BigDecimal = {
-        val part1 = (BigDecimal) (v1._1 - v2._1) * (BigDecimal) (v1._1 - v2._1)
-        val part2 = (BigDecimal) (v1._2 - v2._2) * (BigDecimal) (v1._2 - v2._2)
+    def euclideanDistancePointPoint(v1: (Int, Int), v2: (Int, Int)): Double = {
+        val part1 = (v1._1 - v2._1).toDouble * (v1._1 - v2._1)
+        val part2 = (v1._2 - v2._2).toDouble * (v1._2 - v2._2)
         part1 + part2
     }
 
     /** Return the euclidean distance between two points */
-    def euclideanDistanceArrayArray(a1: Array[(BigInt, Int)], a2: Array[(BigInt, Int)]): BigDecimal = {
+    def euclideanDistance(a1: Array[(Int, Int)], a2: Array[(Int, Int)]): Double = {
         assert(a1.length == a2.length)
-        var sum: BigDecimal = 0d
+        var sum = 0d
         var idx = 0
         while (idx < a1.length) {
             sum += euclideanDistancePointPoint(a1(idx), a2(idx))
@@ -185,22 +203,10 @@ class Assignment2 extends Serializable {
     }
 
 
-    /** Return the euclidean distance between two points */
-    def euclideanDistanceArrayPoint(a1: Array[(BigInt, Int)], v2: (BigInt, Int)): BigDecimal = {
-        var sum: BigDecimal = 0d
-        var idx = 0
-        while (idx < a1.length) {
-            sum += euclideanDistancePointPoint(a1(idx), v2)
-            idx += 1
-        }
-        sum
-    }
-
-
     /** Return the closest point */
-    def findClosest(p: (BigInt, Int), centers: Array[(BigInt, Int)]): Int = {
+    def findClosest(p: (Int, Int), centers: Array[(Int, Int)]): Int = {
         var bestIndex = 0
-        var closest: BigDecimal = null
+        var closest = Double.PositiveInfinity
         for (i <- 0 until centers.length) {
             val tempDist = euclideanDistancePointPoint(p, centers(i))
             if (closest == null || tempDist < closest) {
@@ -213,22 +219,22 @@ class Assignment2 extends Serializable {
 
 
     /** Average the vectors */
-    def averageVectors(ps: Iterable[(BigInt, Int)]): (BigInt, Int) = {
+    def averageVectors(ps: Iterable[(Int, Int)]): (Int, Int) = {
         val iter = ps.iterator
         var count = 0
-        var comp1: BigInt = 0
-        var comp2: Int = 0
+        var comp1: Long = 0
+        var comp2: Long = 0
         while (iter.hasNext) {
             val item = iter.next
             comp1 += item._1
             comp2 += item._2
             count += 1
         }
-        ((comp1 / count), (comp2 / count))
+        ((comp1 / count).toInt, (comp2 / count).toInt)
     }
 
 
-    def computeMedian(a: Iterable[(BigInt, Int)]) = {
+    def computeMedian(a: Iterable[(Int, Int)]) = {
         val s = a.map(x => x._2).toArray
         val length = s.length
         val (lower, upper) = s.sortWith(_ < _).splitAt(length / 2)
