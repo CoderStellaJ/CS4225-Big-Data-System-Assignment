@@ -146,7 +146,7 @@ class Assignment2 extends Serializable {
             // info message
             println("iteration: "+iteration+" distance: "+BigDecimal(distance))
             println("centroids size: " + centroids.size)
-            println("centroids are:")
+            print("centroids are:")
             centroids.foreach(print)
             print("\n")
             // return means from the function
