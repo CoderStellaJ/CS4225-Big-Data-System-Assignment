@@ -97,15 +97,12 @@ class Assignment2 extends Serializable {
             .map(x => (x.parentId.get, x))
 
         questions.join(answers).groupByKey()
-
-        //rawLines.groupBy(x => if (x.postingType == 1) x.id else x.parentId.get)
     }
 
 
     /** Compute the maximum score for each posting */
     def scoredPostings(groupedLines: RDD[(Int, Iterable[(Posting, Posting)])]): RDD[(Posting, Int)] = {
         //ToDo
-        //groupedLines.mapValues(v => v.maxBy(x => x.score).score)
         def highestScore(posts: Iterable[Posting]): Int = {
             posts.maxBy(p => p.score).score
         }
@@ -136,23 +133,27 @@ class Assignment2 extends Serializable {
             // base case, return and stop the recursion
             centroids
         } else {
-            val clusteredVectors = vectors.map(vec => (centroids(findClosest(vec, centroids)), vec))
+            val clusteredVectors = vectors.map(vec => (findClosest(vec, centroids), vec))
             // calculate the new centroids
-            val newClusters = clusteredVectors.groupByKey()
-                .map(group => (group._1, averageVectors(group._2)))
-            val newCentroids = newClusters.values.cache()
+            val newCentroids = centroids.clone()
+
+            clusteredVectors.groupByKey.mapValues(v => averageVectors(v)).collect()
+                .foreach({ case (idx, p) => newCentroids.update(idx, p) })
+
             // compute the errors
-            val distance = euclideanDistance(newClusters.keys.collect(), newCentroids.collect())
+            val distance = euclideanDistance(centroids, newCentroids)
             val isConverged = converged(distance)
             // info message
             println("iteration: "+iteration+" distance: "+BigDecimal(distance))
+            println("centroids size: " + centroids.size)
             println("centroids are:")
-            centroids.foreach(println)
+            centroids.foreach(print)
+            print("\n")
             // return means from the function
             if (isConverged == true) {
-                newCentroids.collect()
+                newCentroids
             } else {
-                kmeans(newCentroids.collect(), vectors, iteration + 1)
+                kmeans(newCentroids, vectors, iteration + 1)
             }
         }
     }
