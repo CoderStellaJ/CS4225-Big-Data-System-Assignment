@@ -21,7 +21,6 @@ object Assignment2 extends Assignment2 {
     def main(args: Array[String]): Unit = {
         val startTime = System.currentTimeMillis()
 
-        val Output = "../Task2_data/output"
         val lines = sc.textFile("../Task2_data/QA_data/QA_data.csv")
         val raw = rawPostings(lines)
         val grouped = groupedPostings(raw)
